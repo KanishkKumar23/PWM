@@ -1,0 +1,60 @@
+module timer_input #(parameter BITS = 4) (input clk, input reset_n,input enable,input [BITS-1:0] FINAL_VALUE,
+                                          output done);
+    reg [BITS-1:0] Q_reg, Q_next;
+
+always @(posedge clk, negedge reset_n)
+begin
+    if (~reset_n)
+        Q_reg <= 'b0;
+    else if (enable)
+        Q_reg <=Q_next;
+    else
+        Q_reg <= Q_reg;
+
+end
+
+// Next state logic
+
+always @(*)
+begin 
+    Q_next = Q_reg + 1;
+    if(FINAL_VALUE==Q_reg)
+        done=1;
+    else
+        done=0;
+end
+endmodule
+
+module pwm2 #(parameter R = 8,TIMER_BITS=15) (input clk, input reset_n,input [R-1:0]duty,
+                                              input[TIMER_BITS-1:0]Final_value,
+                                          output pwm);
+    reg [R-1:0] Q_reg, Q_next;
+wire enable;
+always @(posedge clk, negedge reset_n)
+begin
+    if (~reset_n)
+        begin 
+            Q_reg <= 'b0;
+            d_reg<='b0;
+        end
+    else if (enable)
+        begin 
+            Q_reg <=Q_next;
+            d_reg<=d_next;
+        end
+end
+
+// Next state logic
+
+always @(*)
+begin 
+    Q_next=Q_reg+1;
+    d_next=(Q_reg<duty);
+end
+  
+//output
+    assign pwm=d_reg;
+    
+    
+timer_input #(.BITS(TIMER_BITS)) TIMER0 (.clk(clk),.reset_n(reset_n),.enable(1'b1),.Final_value(Final_value),.done(enable));
+endmodule
